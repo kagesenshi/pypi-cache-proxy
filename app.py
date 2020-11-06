@@ -8,6 +8,7 @@ from time import time
 import multiprocessing
 import gunicorn.app.base
 import argparse
+import zc.lockfile as lockfile
 
 pypi_upstream = 'https://pypi.python.org/simple/'
 files_upstream = 'https://files.pythonhosted.org/'
@@ -41,8 +42,14 @@ def get_pypi(path):
     upstream = pypi_upstream + path + '?' + request.query_string.decode('utf8')
     print('Fetching upstream %s' % upstream)
     r = requests.get(upstream)
-    with open(cache_file, 'wb') as f:
-        f.write(r.content)
+
+    try:
+        lock = lockfile.LockFile(cache_file + '.lock')
+        with open(cache_file, 'wb') as f:
+            f.write(r.content)
+    except lockfile.LockError:
+        pass
+
     return Response(rewrite_response(r.text), mimetype=r.headers.get('Content-Type'))
 
 
@@ -61,12 +68,13 @@ def get_files(path):
     upstream = files_upstream + path + '?' + request.query_string.decode('utf8')
     print('Fetching upstream %s' % upstream)
     r = requests.get(upstream)
-    with open(cache_file, 'wb') as f:
-        f.write(r.content)
+    try:
+        lock = lockfile.LockFile(cache_file + '.lock')
+        with open(cache_file, 'wb') as f:
+            f.write(r.content)
+    except lockfile.LockError:
+        pass
     return Response(r.content, mimetype=r.headers.get('Content-Type'))
-
-
-
 
 
 def number_of_workers():
