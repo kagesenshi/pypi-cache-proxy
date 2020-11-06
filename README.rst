@@ -22,7 +22,7 @@ To install package from this cache, you can use ``-i`` option::
   pip install -i http://localhost:5000/simple
 
 Or you can `override your default pypi URL
-<https://pip.pypa.io/en/stable/user_guide/#id22>`_.
+<https://pip.pypa.io/en/stable/user_guide/#config-file>`_.
 
 Known Issue 
 ------------
