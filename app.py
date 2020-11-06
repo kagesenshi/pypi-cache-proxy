@@ -5,11 +5,17 @@ import os
 import mimetypes
 import hashlib
 from time import time
+import multiprocessing
+import gunicorn.app.base
+import argparse
 
 pypi_upstream = 'https://pypi.python.org/simple/'
 files_upstream = 'https://files.pythonhosted.org/'
-cache_dir = os.path.join(os.path.dirname(__file__), 'cache')
-cache_days = 7
+
+cache_dir = os.environ.get('PYPI_CACHE_DIR', 
+        os.path.join(os.path.dirname(__file__), 'cache'))
+
+cache_days = int(os.environ.get('PYPI_CACHE_DAYS', 7))
 
 app = Flask('PyPI Caching Proxy')
 
@@ -60,5 +66,41 @@ def get_files(path):
     return Response(r.content, mimetype=r.headers.get('Content-Type'))
 
 
+
+
+
+def number_of_workers():
+    return (multiprocessing.cpu_count() * 2) + 1
+
+class Application(gunicorn.app.base.BaseApplication):
+
+    def __init__(self, app, options=None):
+        self.options = options or {}
+        self.application = app
+        super().__init__()
+
+    def load_config(self):
+        config = {key: value for key, value in self.options.items()
+                  if key in self.cfg.settings and value is not None}
+        for key, value in config.items():
+            self.cfg.set(key.lower(), value)
+
+    def load(self):
+        return self.application
+
 if __name__ == '__main__':
-    app.run('0.0.0.0', 5000)
+    parser = argparse.ArgumentParser(description='Start PyPI Cache Proxy')
+    parser.add_argument('-l', '--host', help='Listening host',
+            default='0.0.0.0')
+    parser.add_argument('-p', '--port', help='Listening port', default=5000,
+            type=int)
+    parser.add_argument('-w', '--workers', help='Gunicorn workers',
+            default=number_of_workers(), type=int)
+
+    args = parser.parse_args()
+
+    options = {
+        'bind': '%s:%s' % (args.host, args.port),
+        'workers': args.workers,
+    }
+    Application(app, options).run()
