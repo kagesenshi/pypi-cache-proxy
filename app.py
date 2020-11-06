@@ -45,8 +45,10 @@ def get_pypi(path):
 
     try:
         lock = lockfile.LockFile(cache_file + '.lock')
-        with open(cache_file, 'wb') as f:
+        with open(cache_file + '.tmp', 'wb') as f:
             f.write(r.content)
+        os.rename(cache_file + '.tmp', cache_file)
+        lock.done()
     except lockfile.LockError:
         pass
 
@@ -70,8 +72,10 @@ def get_files(path):
     r = requests.get(upstream)
     try:
         lock = lockfile.LockFile(cache_file + '.lock')
-        with open(cache_file, 'wb') as f:
+        with open(cache_file + '.tmp', 'wb') as f:
             f.write(r.content)
+        os.rename(cache_file + '.tmp', cache_file)
+        lock.done()
     except lockfile.LockError:
         pass
     return Response(r.content, mimetype=r.headers.get('Content-Type'))
