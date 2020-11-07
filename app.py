@@ -38,7 +38,7 @@ def get_pypi(path):
             mimetype = 'text/html'
             print('Fetching from cache %s' % cache_file)
             with open(cache_file, 'rb') as f:
-                return Response(f.read(), mimetype=mimetype)
+                return Response(rewrite_response(f.read()), mimetype=mimetype)
     upstream = pypi_upstream + path + '?' + request.query_string.decode('utf8')
     print('Fetching upstream %s' % upstream)
     r = requests.get(upstream)
