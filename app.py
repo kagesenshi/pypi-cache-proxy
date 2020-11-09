@@ -48,7 +48,7 @@ def get_pypi(path):
         with open(cache_file + '.tmp', 'wb') as f:
             f.write(r.content)
         os.rename(cache_file + '.tmp', cache_file)
-        lock.done()
+        lock.close()
     except lockfile.LockError:
         pass
 
@@ -75,7 +75,7 @@ def get_files(path):
         with open(cache_file + '.tmp', 'wb') as f:
             f.write(r.content)
         os.rename(cache_file + '.tmp', cache_file)
-        lock.done()
+        lock.close()
     except lockfile.LockError:
         pass
     return Response(r.content, mimetype=r.headers.get('Content-Type'))
