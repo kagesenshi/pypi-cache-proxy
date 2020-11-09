@@ -37,7 +37,7 @@ def get_pypi(path):
         if (time() - st.st_mtime) < (cache_days*24*60*60):
             mimetype = 'text/html'
             print('Fetching from cache %s' % cache_file)
-            with open(cache_file, 'rb') as f:
+            with open(cache_file, 'r') as f:
                 return Response(rewrite_response(f.read()), mimetype=mimetype)
     upstream = pypi_upstream + path + '?' + request.query_string.decode('utf8')
     print('Fetching upstream %s' % upstream)
@@ -45,7 +45,7 @@ def get_pypi(path):
 
     try:
         lock = lockfile.LockFile(cache_file + '.lock')
-        with open(cache_file + '.tmp', 'wb') as f:
+        with open(cache_file + '.tmp', 'w') as f:
             f.write(r.content)
         os.rename(cache_file + '.tmp', cache_file)
         lock.done()
