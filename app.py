@@ -45,7 +45,7 @@ def get_pypi(path):
 
     try:
         lock = lockfile.LockFile(cache_file + '.lock')
-        with open(cache_file + '.tmp', 'w') as f:
+        with open(cache_file + '.tmp', 'wb') as f:
             f.write(r.content)
         os.rename(cache_file + '.tmp', cache_file)
         lock.done()
